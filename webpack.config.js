@@ -1,13 +1,13 @@
-const path = require('path')
-const CopyPlugin = require("copy-webpack-plugin");
+const path = require('path');
+const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
-  entry: path.resolve(__dirname, "./src/main.js"),
-  devtool: "source-map",
+  entry: path.resolve(__dirname, './src/main.js'),
+  devtool: 'source-map',
   output: {
-    path: path.resolve(__dirname, "./build"),
-    filename: "bundle.js",
-    clean: true
+    path: path.resolve(__dirname, './build'),
+    filename: 'bundle.js',
+    clean: true,
   },
   devServer: {
     port: 3000,
@@ -15,25 +15,24 @@ module.exports = {
   },
   plugins: [
     new CopyPlugin({
-      patterns: [{
-        from: path.resolve(__dirname, "./public"),
-        to: path.resolve(__dirname, "./build")
-      }
+      patterns: [
+        {
+          from: path.resolve(__dirname, './public'),
+          to: path.resolve(__dirname, './build'),
+        },
       ],
-    })
+    }),
   ],
   module: {
     rules: [
       {
         test: /\.m?js$/,
         exclude: /node_modules/,
-        loader:  'babel-loader',
+        loader: 'babel-loader',
         options: {
-          presets: [
-            ['@babel/preset-env']
-          ]
-        }
-      }
-    ]
-  }
-}
+          presets: [['@babel/preset-env']],
+        },
+      },
+    ],
+  },
+};
