@@ -1,17 +1,16 @@
 import { createElement } from '../render.js';
 
-const createTripTemplate = () => (
+const createTripTemplate = () =>
   `<ul class="trip-events__list">
-  </ul>`
-);
+  </ul>`;
 
 export default class TripView {
-  getTemplate () {
+  getTemplate() {
     return createTripTemplate();
   }
 
   getElement() {
-    if (!this.element){
+    if (!this.element) {
       this.element = createElement(this.getTemplate());
     }
 
