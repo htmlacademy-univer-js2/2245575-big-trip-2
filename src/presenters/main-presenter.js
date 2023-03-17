@@ -9,16 +9,25 @@ export default class MainPresenter {
     this.containerListElement = containerListElement;
   }
 
-  init() {
+  init(pointsData, destinationsData, offersData) {
+    const points = [...pointsData.getPoints()];
+    const offers = offersData;
+    const destinations = destinationsData;
     const tripSectionElement = document.querySelector('.trip-events');
     render(new SortView(), tripSectionElement);
     render(this.containerListElement, tripSectionElement);
 
     render(new NewPointView(), this.containerListElement.getElement());
-    render(new EditPointView(), this.containerListElement.getElement());
+    render(
+      new EditPointView(points[0], offers, destinations),
+      this.containerListElement.getElement()
+    );
 
-    for (let i = 0; i < 3; i++) {
-      render(new PointView(), this.containerListElement.getElement());
+    for (const point of points) {
+      render(
+        new PointView(point, offers, destinations),
+        this.containerListElement.getElement()
+      );
     }
   }
 }
