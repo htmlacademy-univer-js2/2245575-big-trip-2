@@ -29,5 +29,8 @@
     ">0.2%",
     "not dead",
     "not op_mini all"
-  ]
+  ],
+  "dependencies": {
+    "dayjs": "^1.11.7"
+  }
 }
