@@ -29,7 +29,6 @@ const createPointTemplate = (point, offers, destinations) => {
   const eventDuration = getDuration(dateFrom, dateTo);
   const startDate = dateFrom !== null ? humanizePointDueDate(dateFrom) : '';
   const endDate = dateTo !== null ? humanizePointDueDate(dateTo) : '';
-  console.log(offers)
   const pointTypeOffers = offers.find((offer) => offer.type === type);
 
   return `<li class="trip-events__item">
@@ -67,10 +66,10 @@ const createPointTemplate = (point, offers, destinations) => {
 };
 
 export default class PointView {
-  #point = null
-  #offers = null
-  #destinations = null
-  #element = null
+  #point = null;
+  #offers = null;
+  #destinations = null;
+  #element = null;
 
   constructor(pointData, offers, destinations) {
     this.#point = pointData;

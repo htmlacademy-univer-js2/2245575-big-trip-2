@@ -25,7 +25,7 @@ const createSortingTemplate = () =>
 </form>`;
 
 export default class SortView {
-  #element = null
+  #element = null;
 
   get template() {
     return createSortingTemplate();

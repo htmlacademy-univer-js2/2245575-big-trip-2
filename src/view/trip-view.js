@@ -5,7 +5,7 @@ const createTripTemplate = () =>
   </ul>`;
 
 export default class TripView {
-  #element = null
+  #element = null;
 
   get template() {
     return createTripTemplate();

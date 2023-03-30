@@ -7,7 +7,7 @@ const createMenuTemplate = () =>
   </nav>`;
 
 export default class MenuView {
-  #element = null
+  #element = null;
 
   get template() {
     return createMenuTemplate();

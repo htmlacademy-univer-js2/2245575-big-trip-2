@@ -26,7 +26,7 @@ export default class MainPresenter {
 
 
     for (const point of this.#points) {
-        this.#renderPoint(point);
+      this.#renderPoint(point);
     }
   }
 
@@ -69,5 +69,5 @@ export default class MainPresenter {
     });
 
     render(pointComponent, this.#containerListElement.element);
-  }
+  };
 }

@@ -1,7 +1,7 @@
 import { generatePoint } from '../mock/points';
 
 export default class Points {
-  #points = []
+  #points = [];
 
   constructor() {
     this.#points = Array.from({ length: 10 }).map((value, index) =>
