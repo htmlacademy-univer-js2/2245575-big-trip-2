@@ -1,44 +1,64 @@
 import dayjs from 'dayjs';
+import duration from 'dayjs/plugin/duration';
+import { TIME } from './mock/const';
 
-import {
-  HOUR_MINUTES_COUNT,
-  TOTAL_DAY_MINUTES_COUNT,
-  DATE_FORMAT,
-  DATE_TIME_FORMAT,
-  TIME_FORMAT,
-} from './constants';
+dayjs.extend(duration);
 
-export const getRandomNumber = (a = 0, b = 1) => {
+const getRandomInteger = (a = 0, b = 1) => {
   const lower = Math.ceil(Math.min(a, b));
   const upper = Math.floor(Math.max(a, b));
 
   return Math.floor(lower + Math.random() * (upper - lower + 1));
 };
 
-export const getDate = (date) => dayjs(date).format(DATE_FORMAT);
+const convertEventDateIntoDay = (pointDate) => dayjs(pointDate).format('MMM D');
 
-export const getTime = (date) => dayjs(date).format(TIME_FORMAT);
+const convertEventDateIntoHour = (pointDate) =>
+  dayjs(pointDate).format('HH:mm');
 
-export const getDateTime = (date) => dayjs(date).format(DATE_TIME_FORMAT);
+const generateDates = () => {
+  const startDate = dayjs();
+  return {
+    startDate: startDate,
+    endDate: startDate.add(
+      getRandomInteger(TIME.MINUTES / 2, TIME.HOURS * TIME.MINUTES * 2),
+      'minutes'
+    ),
+  };
+};
 
-export const humanizePointDueDate = (date) => dayjs(date).format('DD MMM');
+const subtractDates = (startDate, endDate) => {
+  const dateFrom = dayjs(startDate);
+  const dateTo = dayjs(endDate);
 
-export const getDuration = (dateFrom, dateTo) => {
-  const start = dayjs(dateFrom);
-  const end = dayjs(dateTo);
-  const difference = end.diff(start, 'minute');
-
-  const days = Math.floor(difference / TOTAL_DAY_MINUTES_COUNT);
-  const restHours = Math.floor(
-    (difference - days * TOTAL_DAY_MINUTES_COUNT) / HOUR_MINUTES_COUNT
+  const diffInTotalMinutes = Math.ceil(dateTo.diff(dateFrom, 'minute', true));
+  const diffInHours =
+    Math.floor(diffInTotalMinutes / TIME.MINUTES) % TIME.HOURS;
+  const diffInDays = Math.floor(
+    diffInTotalMinutes / (TIME.MINUTES * TIME.HOURS)
   );
-  const restMinutes =
-    difference -
-    (days * TOTAL_DAY_MINUTES_COUNT + restHours * HOUR_MINUTES_COUNT);
 
-  const daysOutput = days ? `${days}D` : '';
-  const hoursOutput = restHours ? `${restHours}H` : '';
-  const minutesOutput = restMinutes ? `${restMinutes}M` : '';
+  if (diffInDays === 0 && diffInHours === 0) {
+    return dayjs.duration(diffInTotalMinutes, 'minutes').format('mm[M]');
+  } else if (diffInDays === 0) {
+    return dayjs.duration(diffInTotalMinutes, 'minutes').format('HH[H] mm[M]');
+  }
+  return dayjs
+    .duration(diffInTotalMinutes, 'minutes')
+    .format('DD[D] HH[H] mm[M]');
+};
 
-  return `${daysOutput} ${hoursOutput} ${minutesOutput}`;
+const checkFavoriteOption = (isFavorite) =>
+  isFavorite ? 'event__favorite-btn--active' : '';
+
+const capitalizeFirstLetter = (str) => str[0].toUpperCase() + str.slice(1);
+
+export {
+  getRandomInteger,
+  convertEventDateIntoDay,
+  convertEventDateIntoHour,
+  generateDates,
+  subtractDates,
+  checkFavoriteOption,
+  capitalizeFirstLetter,
 };

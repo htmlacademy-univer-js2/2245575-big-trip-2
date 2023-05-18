@@ -1,23 +1,28 @@
-import MainPresenter from './presenters/main-presenter';
-import { render } from './render';
+import EventsModel from './model/events-model';
 import MenuView from './view/menu-view.js';
-import FiltersView from './view/filters-view.js';
-import TripView from './view/trip-view';
-import Points from './model/points';
-import { destinations, offers } from './mock/points';
+import FilterView from './view/filter-view';
+import { render, RenderPosition } from './framework/render';
+import TripInfoView from './view/trip-info-view';
+import RootPresenter from './presenter/root-presenter';
+import AddFormView from './view/add-form-view';
 
-const navigationContainerElement = document.querySelector(
-  '.trip-controls__navigation'
-);
-const filtersContainerElement = document.querySelector(
-  '.trip-controls__filters'
-);
-const tripContainerElement = new TripView();
-const points = new Points();
+const headerElement = document.querySelector('.page-header');
+const mainElement = document.querySelector('.page-main');
 
-render(new MenuView(), navigationContainerElement);
-render(new FiltersView(), filtersContainerElement);
+const tripMainElement = document.querySelector('.trip-main');
+const navigation = headerElement.querySelector('.trip-controls__navigation');
+const filters = headerElement.querySelector('.trip-controls__filters');
+const content = mainElement.querySelector('.trip-events');
+tripMainElement
+  .querySelector('.trip-main__event-add-btn')
+  .addEventListener('click', () =>
+    render(new AddFormView(), content, RenderPosition.AFTERBEGIN)
+  );
 
-const mainPresenter = new MainPresenter(tripContainerElement);
+const routePresenter = new RootPresenter();
+const eventsModel = new EventsModel();
 
-mainPresenter.init(points, destinations, offers);
+render(new MenuView(), navigation);
+render(new TripInfoView(), tripMainElement, RenderPosition.AFTERBEGIN);
+render(new FilterView(), filters);
+routePresenter.init(content, eventsModel);
