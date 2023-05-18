@@ -62,4 +62,10 @@ const DESTINATIONS = [
   },
 ];
 
-export { TIME, PRICE, TYPES, OFFER_TITLES, DESTINATIONS };
+const FILTER_TYPES = {
+  EVERYTHING: 'everything',
+  FUTURE: 'future',
+  PAST: 'past',
+};
+
+export { TIME, PRICE, TYPES, OFFER_TITLES, DESTINATIONS, FILTER_TYPES };
