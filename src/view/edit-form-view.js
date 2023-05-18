@@ -20,14 +20,9 @@ const createAvailableOptionsTemplate = (offers, eventType) => {
     .map(
       (offer) =>
         `<div class="event__offer-selector">
-      <input class="event__offer-checkbox  visually-hidden" id="event-offer-${offer.title
-        .split(' ')
-        .pop()}-${offer.id}" type="checkbox" name="event-offer-${offer.title
-          .split(' ')
-          .pop()}">
-      <label class="event__offer-label" for="event-offer-${offer.title
-        .split(' ')
-        .pop()}-${offer.id}">
+      <input class="event__offer-checkbox  visually-hidden" id="event-offer-${offer.title.split(' ')
+    .pop()}-${offer.id}" type="checkbox" name="event-offer-${offer.title.split(' ').pop()}">
+      <label class="event__offer-label" for="event-offer-${offer.title.split(' ').pop()}-${offer.id}">
         <span class="event__offer-title">${offer.title}</span>
         &plus;&euro;&nbsp;
         <span class="event__offer-price">${offer.price}</span>
@@ -132,10 +127,7 @@ const createEditFormTemplate = (event) => {
               </section>
               <section class="event__section  event__section--destination">
                 <h3 class="event__section-title  event__section-title--destination">Destination</h3>
-                <p class="event__destination-description">${createDestinationDescriptionTemplate(
-                  DESTINATIONS,
-                  name
-                )}</p>
+                <p class="event__destination-description">${createDestinationDescriptionTemplate(DESTINATIONS,name)}</p>
               </section>
             </section>
             </form>`;
@@ -150,7 +142,6 @@ export default class EditFormView extends AbstractView {
   }
 
   get template() {
-    console.log(this.#event);
     return createEditFormTemplate(this.#event);
   }
 
