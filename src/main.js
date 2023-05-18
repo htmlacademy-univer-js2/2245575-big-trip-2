@@ -22,11 +22,11 @@ tripMainElement
     render(new AddFormView(), contentElement, RenderPosition.AFTERBEGIN)
   );
 
-const routePresenter = new RootPresenter();
 const eventsModel = new EventsModel();
+const routePresenter = new RootPresenter(contentElement, eventsModel);
 const filters = generateFilter(eventsModel.events);
 
 render(new MenuView(), navigationElement);
 render(new TripInfoView(), tripMainElement, RenderPosition.AFTERBEGIN);
 render(new FilterView(filters), filtersElement);
-routePresenter.init(contentElement, eventsModel);
+routePresenter.init();

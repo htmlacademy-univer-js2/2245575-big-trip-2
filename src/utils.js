@@ -63,6 +63,14 @@ const filter = {
     events.filter((event) => isEventPassed(event.startDate, event.endDate)),
 };
 
+const update = (items, updatedItem) =>
+  items.map((item) => {
+    if (item.id === updatedItem.id) {
+      return updatedItem;
+    }
+    return item;
+  });
+
 export {
   getRandomInteger,
   convertEventDateIntoDay,
@@ -75,4 +83,5 @@ export {
   checkFavoriteOption,
   capitalizeFirstLetter,
   filter,
+  update,
 };

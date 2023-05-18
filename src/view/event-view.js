@@ -7,7 +7,7 @@ import {
 } from '../utils.js';
 import { DESTINATIONS } from '../mock/const';
 import { OFFERS } from '../mock/offers.js';
-import AbstractView from '../framework/view/abstract-view.js';
+import AbstractView from '../framework/view/abstract-view';
 
 const createOfferTemplate = (offers) =>
   offers.reduce((result, offer) => {
@@ -44,7 +44,7 @@ const createEventTemplate = (event) => {
     <div class="event">
     <time class="event__date" datetime="${convertEventDateIntoDay(startDate)}">${convertEventDateIntoDay(startDate)}</time>
     <div class="event__type">
-      <img class="event__type-icon" width="42" height="42" src="img/icons/sightseeing.png" alt="Event type icon">
+      <img class="event__type-icon" width="42" height="42" src="img/icons/${type}.png" alt="Event type icon">
     </div>
     <h3 class="event__title">${capitalizeFirstLetter(type)} ${name}</h3>
     <div class="event__schedule">
@@ -94,5 +94,17 @@ export default class EventView extends AbstractView {
   #rollUpHandler = (e) => {
     e.preventDefault();
     this._callback.rollUp();
+  };
+
+  setFavoriteHandler = (callback) => {
+    this._callback.favoriteClick = callback;
+    this.element
+      .querySelector('.event__favorite-btn')
+      .addEventListener('click', this.#favoriteClickHandler);
+  };
+
+  #favoriteClickHandler = (evt) => {
+    evt.preventDefault();
+    this._callback.favoriteClick();
   };
 }
