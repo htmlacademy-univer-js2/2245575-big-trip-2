@@ -51,6 +51,7 @@ const createPicturesListTemplate = (pictures) =>
       </div>
    </div>`;
 
+// comment
 const createEditFormTemplate = ({
   selectedDestination,
   type,
@@ -66,7 +67,7 @@ const createEditFormTemplate = ({
           <label class="event__type  event__type-btn" for="event-type-toggle-1">
             <span class="visually-hidden">Choose event type</span>
             <img class="event__type-icon" width="17" height="17" src="img/icons/${type}.png" alt="Event type icon">
-          </label>
+          </label> комментарий
           <input class="event__type-toggle  visually-hidden" id="event-type-toggle-1" type="checkbox">
           <div class="event__type-list">
             <fieldset class="event__type-group">
