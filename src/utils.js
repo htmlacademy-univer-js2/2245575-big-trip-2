@@ -17,7 +17,10 @@ const convertEventDateForEditForm = (date) =>
   dayjs(date).format('DD/MM/YY HH:mm');
 
 const generateDates = () => {
-  const startDate = dayjs();
+  const startDate = dayjs().subtract(
+    getRandomInteger(0, TIME.MINUTES * 2),
+    'minutes'
+  );
   return {
     startDate: startDate,
     endDate: startDate.add(
@@ -71,6 +74,14 @@ const update = (items, updatedItem) =>
     return item;
   });
 
+const sortByPrice = (a, b) => b.basePrice - a.basePrice;
+const sortByDuration = (a, b) => {
+  const durationA = Math.ceil(a.endDate.diff(a.startDate, 'minute', true));
+  const durationB = Math.ceil(b.endDate.diff(b.startDate, 'minute', true));
+  return durationB - durationA;
+};
+const sortByDate = (a, b) => dayjs(a.startDate) - dayjs(b.startDate);
+
 export {
   getRandomInteger,
   convertEventDateIntoDay,
@@ -84,4 +95,7 @@ export {
   capitalizeFirstLetter,
   filter,
   update,
+  sortByPrice,
+  sortByDuration,
+  sortByDate,
 };
