@@ -1,4 +1,4 @@
-import { render } from '../framework/render';
+import { render, remove } from '../framework/render';
 import EventsListView from '../view/events-list-view.js';
 import SortingView from '../view/sorting-view';
 import EmptyListView from '../view/empty-list-view';
@@ -7,11 +7,11 @@ import { sortByPrice, sortByDuration, sortByDate, update } from '../utils';
 import { SORT_TYPES } from '../mock/const';
 
 export default class RootPresenter {
-  #rootContainer = null;
-  #eventsModel = null;
-  #events = null;
+  #rootContainer;
+  #eventsModel;
+  #events;
+  #sortComponent;
   #eventsList = new EventsListView();
-  #sortComponent = new SortingView();
   #emptyList = new EmptyListView();
   #eventPresenter = new Map();
   #currentSortType = SORT_TYPES.DEFAULT;
@@ -28,7 +28,7 @@ export default class RootPresenter {
     this.#renderEventsList();
   };
 
-  #changePointHandler = (updatedEvent) => {
+  #changeEventHandler = (updatedEvent) => {
     this.#events = update(this.#events, updatedEvent);
     this.#initialEvents = update(this.#initialEvents, updatedEvent);
     this.#eventPresenter.get(updatedEvent.id).init(updatedEvent);
@@ -80,7 +80,7 @@ export default class RootPresenter {
   #renderEvent = (event) => {
     const eventPresenter = new EventPresenter(
       this.#eventsList.element,
-      this.#changePointHandler,
+      this.#changeEventHandler,
       this.#switchModeHandler
     );
     eventPresenter.init(event);
@@ -92,6 +92,11 @@ export default class RootPresenter {
   };
 
   #renderSort = () => {
+    if (this.#sortComponent instanceof SortingView) {
+      remove(this.#sortComponent);
+    }
+
+    this.#sortComponent = new SortingView(this.#currentSortType);
     render(this.#sortComponent, this.#rootContainer);
     this.#sortComponent.setSortHandler(this.#sortHandler);
   };
