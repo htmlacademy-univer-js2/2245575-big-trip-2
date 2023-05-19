@@ -67,12 +67,7 @@ const filter = {
 };
 
 const update = (items, updatedItem) =>
-  items.map((item) => {
-    if (item.id === updatedItem.id) {
-      return updatedItem;
-    }
-    return item;
-  });
+  items.map((item) => (item.id === updatedItem.id ? updatedItem : item));
 
 const sortByPrice = (a, b) => b.basePrice - a.basePrice;
 const sortByDuration = (a, b) => {
