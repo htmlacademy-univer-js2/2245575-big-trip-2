@@ -18,7 +18,10 @@ const convertEventDateForEditForm = (date) =>
 
 const generateDates = () => {
   const startDate = dayjs().subtract(
-    getRandomInteger(0, TIME.MINUTES * 2),
+    getRandomInteger(
+      -2 * TIME.HOURS * TIME.MINUTES,
+      2 * TIME.HOURS * TIME.MINUTES
+    ),
     'minutes'
   );
   return {
@@ -61,6 +64,9 @@ const isFavoriteOption = (isFavorite) =>
 const capitalizeFirstLetter = (str) => str[0].toUpperCase() + str.slice(1);
 const isSubmitDisabledByDate = (dateTo, dateFrom) =>
   dayjs(dateTo).diff(dayjs(dateFrom)) <= 0;
+const isSubmitDisabledByPrice = (price) =>
+  Number(price) > 0 && Number.isInteger(Number(price));
+const isDatesEqual = (dateA, dateB) => dayjs(dateA).isSame(dateB, 'D');
 
 const filter = {
   [FILTER_TYPES.EVERYTHING]: (events) => events.map((event) => event),
@@ -69,9 +75,6 @@ const filter = {
   [FILTER_TYPES.PAST]: (events) =>
     events.filter((event) => isEventPassed(event.startDate, event.endDate)),
 };
-
-const update = (items, updatedItem) =>
-  items.map((item) => (item.id === updatedItem.id ? updatedItem : item));
 
 const sortByPrice = (a, b) => b.basePrice - a.basePrice;
 const sortByDuration = (a, b) => {
@@ -95,10 +98,11 @@ export {
   isEventPlanned,
   isEventPassed,
   isSubmitDisabledByDate,
-  isFavoriteOption as checkFavoriteOption,
+  isSubmitDisabledByPrice,
+  isFavoriteOption,
+  isDatesEqual,
   capitalizeFirstLetter,
   filter,
-  update,
   sortByPrice,
   sortByDuration,
   sortByDate,

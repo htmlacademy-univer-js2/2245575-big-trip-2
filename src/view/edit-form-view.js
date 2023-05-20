@@ -1,11 +1,13 @@
 import AbstractStatefulView from '../framework/view/abstract-stateful-view';
-import { DESTINATIONS } from '../mock/const';
+import { DESTINATIONS, NEW_POINT } from '../mock/const';
 import { OFFERS, OFFERS_BY_TYPE } from '../mock/offers.js';
 import {
   convertEventDateForEditForm,
   capitalizeFirstLetter,
   isSubmitDisabledByDate,
+  isSubmitDisabledByPrice,
 } from '../utils';
+import he from 'he';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 
@@ -28,8 +30,7 @@ const createAvailableOptionsTemplate = (offers, eventType) => {
     (result, offer) =>
       result.concat(
         `<div class="event__offer-selector">
-      <input class="event__offer-checkbox  visually-hidden" id="event-offer-${offer.title.split(' ').pop()}-${offer.id}"
-        type="checkbox" name="event-offer-${offer.title.split(' ').pop()}"  ${offers.includes(offer.id) ? 'checked' : ''}>
+      <input class="event__offer-checkbox  visually-hidden" id="event-offer-${offer.title.split(' ').pop()}-${offer.id}"type="checkbox" name="event-offer-${offer.title.split(' ').pop()}"  ${offers.includes(offer.id) ? 'checked' : ''}>
       <label class="event__offer-label" for="event-offer-${offer.title.split(' ').pop()}-${offer.id}">
         <span class="event__offer-title">${offer.title}</span>
         &plus;&euro;&nbsp;
@@ -47,11 +48,10 @@ const createDestinationDescriptionTemplate = (destinations, name) =>
 const createPicturesListTemplate = (pictures) =>
   `<div class="event__photos-container">
       <div class="event__photos-tape">
-      ${pictures.reduce((result, picture) =>result.concat(`<img class="event__photo" src="${picture.src}" alt="Event photo">`),'')}
+      ${pictures.reduce((result, picture) => result.concat(`<img class="event__photo" src="${picture.src}" alt="Event photo">`),'')}
       </div>
    </div>`;
 
-// comment
 const createEditFormTemplate = ({
   selectedDestination,
   type,
@@ -67,7 +67,7 @@ const createEditFormTemplate = ({
           <label class="event__type  event__type-btn" for="event-type-toggle-1">
             <span class="visually-hidden">Choose event type</span>
             <img class="event__type-icon" width="17" height="17" src="img/icons/${type}.png" alt="Event type icon">
-          </label> комментарий
+          </label>
           <input class="event__type-toggle  visually-hidden" id="event-type-toggle-1" type="checkbox">
           <div class="event__type-list">
             <fieldset class="event__type-group">
@@ -112,13 +112,9 @@ const createEditFormTemplate = ({
           </div>
         </div>
         <div class="event__field-group  event__field-group--destination">
-          <label class="event__label  event__type-output" for="event-destination-1">
-            ${capitalizeFirstLetter(type)}
-          </label>
-          <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" value="${selectedDestination.name}" list="destination-list-1">
-          <datalist id="destination-list-1">
-            ${createDestionationsOptionsTemplate(DESTINATIONS)}
-          </datalist>
+          <label class="event__label  event__type-output" for="event-destination-1">${capitalizeFirstLetter(type)}</label>
+          <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" value="${he.encode(selectedDestination.name)}" list="destination-list-1">
+          <datalist id="destination-list-1">${createDestionationsOptionsTemplate(DESTINATIONS)}</datalist>
         </div>
         <div class="event__field-group  event__field-group--time">
           <label class="visually-hidden" for="event-start-time-1">From</label>
@@ -134,7 +130,8 @@ const createEditFormTemplate = ({
           </label>
           <input class="event__input  event__input--price" id="event-price-1" type="text" name="event-price" value="${basePrice}">
         </div>
-        <button class="event__save-btn  btn  btn--blue" type="submit" ${isSubmitDisabledByDate(startDate, endDate) ? '' : 'disabled'}>Save</button>
+        <button class="event__save-btn  btn  btn--blue" type="submit" ${isSubmitDisabledByDate(startDate, endDate) ? '' : 'disabled'}
+        ${isSubmitDisabledByPrice(basePrice) ? '' : 'disabled'}>Save</button>
         <button class="event__reset-btn" type="reset">Delete</button>
         <button class="event__rollup-btn" type="button">
           <span class="visually-hidden">Open event</span>
@@ -149,7 +146,8 @@ const createEditFormTemplate = ({
         </section>
         <section class="event__section  event__section--destination">
           <h3 class="event__section-title  event__section-title--destination">Destination</h3>
-          <p class="event__destination-description">${createDestinationDescriptionTemplate(DESTINATIONS,selectedDestination.name)}</p>${selectedDestination.pictures? createPicturesListTemplate(selectedDestination.pictures): ''}
+          <p class="event__destination-description">${createDestinationDescriptionTemplate(DESTINATIONS,selectedDestination.name)}</p>
+          ${selectedDestination.pictures ? createPicturesListTemplate(selectedDestination.pictures) : ''}
         </section>
       </section>
       </form>
@@ -159,7 +157,7 @@ export default class EditFormView extends AbstractStatefulView {
   #startDatepicker;
   #stopDatepicker;
 
-  constructor(event) {
+  constructor(event = NEW_POINT) {
     super();
     this._state = EditFormView.parseEvent(event);
     this.#setInnerHandlers();
@@ -209,6 +207,7 @@ export default class EditFormView extends AbstractStatefulView {
     this.setRollDownHandler(this._callback.rollDown);
     this.#setStartDatepicker();
     this.#setStopDatepicker();
+    this.setDeleteHandler(this._callback.deleteClick);
   };
 
   #setStartDatepicker = () => {
@@ -275,14 +274,31 @@ export default class EditFormView extends AbstractStatefulView {
     this._callback.save(EditFormView.parseState(this._state));
   };
 
+  setDeleteHandler = (callback) => {
+    this._callback.deleteClick = callback;
+    this.element
+      .querySelector('.event__reset-btn')
+      .addEventListener('click', this.#deleteHandler);
+  };
+
+  #deleteHandler = (e) => {
+    e.preventDefault();
+    this._callback.deleteClick(EditFormView.parseState(this._state));
+  };
+
   #destinationToggleHandler = (e) => {
     e.preventDefault();
     if (e.target.value !== '') {
-      this.updateElement({
-        selectedDestination: DESTINATIONS.find(
-          (item) => item.name === e.target.value
-        ),
-      });
+      const findDestinationIndex = DESTINATIONS.findIndex(
+        (item) => item.name === e.target.value
+      );
+      if (findDestinationIndex !== -1) {
+        this.updateElement({
+          selectedDestination: DESTINATIONS.find(
+            (item) => item.name === e.target.value
+          ),
+        });
+      }
     }
   };
 
@@ -301,12 +317,10 @@ export default class EditFormView extends AbstractStatefulView {
   };
 
   #offerToggleHandler = (e) => {
-    if (e.target.tagName.toLowerCase() !== 'label') {
-      return;
-    }
     e.preventDefault();
+    const clickedElementInput = e.target.closest('div').childNodes[1];
     const selectedOffers = this._state.offers;
-    const clickedOffer = parseInt(e.target.htmlFor.match(/\d+/g), 10);
+    const clickedOffer = parseInt(clickedElementInput.id.match(/\d+/g), 10);
     const clickedOfferId = selectedOffers.indexOf(clickedOffer);
 
     if (clickedOfferId === -1) {
@@ -324,16 +338,21 @@ export default class EditFormView extends AbstractStatefulView {
     this.element
       .querySelector('.event__input--destination')
       .addEventListener('change', this.#destinationToggleHandler);
-    // Array.from(this.element.querySelectorAll('.event__type-input'))
-    //   .forEach((typeElement) => typeElement.addEventListener('click', this.#typeToggleHandler));
-    // Array.from(this.element.querySelectorAll('.event__offer-checkbox')).forEach((offerElement) => offerElement
-    //   .addEventListener('click', this.#offerToggleHandler)
-    // );
     this.element
       .querySelector('.event__type-group')
       .addEventListener('click', this.#typeToggleHandler);
     this.element
       .querySelector('.event__available-offers')
       .addEventListener('click', this.#offerToggleHandler);
+    this.element
+      .querySelector('.event__input--price')
+      .addEventListener('change', this.#priceToggleHandler);
+  };
+
+  #priceToggleHandler = (e) => {
+    e.preventDefault();
+    this.updateElement({
+      basePrice: e.target.value,
+    });
   };
 }

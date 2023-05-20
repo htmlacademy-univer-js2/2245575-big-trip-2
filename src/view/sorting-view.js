@@ -18,7 +18,8 @@ const createSortingTemplate = (sortType) =>
       <label class="trip-sort__btn" for="sort-time">Time</label>
     </div>
     <div class="trip-sort__item  trip-sort__item--price">
-      <input id="sort-price" class="trip-sort__input  visually-hidden" type="radio" name="trip-sort" value="sort-price"data-sort-type="${SORT_TYPES.PRICE}" ${sortType === SORT_TYPES.PRICE ? 'checked' : ''}>\
+      <input id="sort-price" class="trip-sort__input  visually-hidden" type="radio" name="trip-sort" value="sort-price"
+      data-sort-type="${SORT_TYPES.PRICE}" ${sortType === SORT_TYPES.PRICE ? 'checked' : ''}>\
       <label class="trip-sort__btn" for="sort-price">Price</label>
     </div>
     <div class="trip-sort__item  trip-sort__item--offer">
