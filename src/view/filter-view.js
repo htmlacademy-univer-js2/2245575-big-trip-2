@@ -5,8 +5,12 @@ const createEventFilterTemplate = ({ type, name, count }, currentFilterType) =>
   `<div class="trip-filters__filter">\
       <input id="filter-${name}" class="trip-filters__filter-input  visually-hidden"
         type="radio" name="trip-filter" value="${name}"
-        ${type === currentFilterType ? 'checked' : ''} ${count === 0 ? 'disabled' : ''}>
-      <label class="trip-filters__filter-label" for="filter-${name}">${capitalizeFirstLetter(name)}</label>\
+        ${type === currentFilterType ? 'checked' : ''} ${
+    count === 0 ? 'disabled' : ''
+  }>
+      <label class="trip-filters__filter-label" for="filter-${name}">${capitalizeFirstLetter(
+    name
+  )}</label>\
     </div>`;
 
 const createFilterTemplate = (items, currentFilterType) => {
@@ -40,8 +44,8 @@ export default class FilterView extends AbstractView {
     this.element.addEventListener('change', this.#changeHandler);
   };
 
-  #changeHandler = (evt) => {
-    evt.preventDefault();
-    this._callback.change(evt.target.value);
+  #changeHandler = (e) => {
+    e.preventDefault();
+    this._callback.change(e.target.value);
   };
 }

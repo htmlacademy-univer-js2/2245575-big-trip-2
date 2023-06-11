@@ -1,7 +1,7 @@
 import { render, replace, remove } from '../framework/render.js';
 import EventView from '../view/event-view.js';
 import EditFormView from '../view/edit-form-view';
-import { USER_ACTIONS, UPDATE_TYPES } from '../mock/const.js';
+import { USER_ACTIONS, UPDATE_TYPES } from '../const.js';
 import { isDatesEqual } from '../utils';
 
 const MODE = {
@@ -16,6 +16,8 @@ export default class EventPresenter {
   #eventComponent;
   #editComponent;
   #event;
+  #offers = null;
+  #destinations = null;
   #mode = MODE.DEFAULT;
 
   constructor(pointListContainer, changeData, switchMode) {
@@ -24,14 +26,24 @@ export default class EventPresenter {
     this.#switchMode = switchMode;
   }
 
-  init = (event) => {
+  init = (event, offers, destinations) => {
     this.#event = event;
+    this.#offers = offers;
+    this.#destinations = destinations;
     const previousEventComponent = this.#eventComponent;
     const previousEventEditComponent = this.#editComponent;
-    this.#eventComponent = new EventView(event);
+    this.#eventComponent = new EventView(
+      this.#event,
+      this.#offers,
+      this.#destinations
+    );
     this.#eventComponent.setRollUpHandler(this.#editClickHandler);
     this.#eventComponent.setFavoriteHandler(this.#favoriteClickHandler);
-    this.#editComponent = new EditFormView(event);
+    this.#editComponent = new EditFormView(
+      this.#event,
+      this.#offers,
+      this.#destinations
+    );
     this.#editComponent.setRollDownHandler(this.#eventClickHandler);
     this.#editComponent.setSaveHandler(this.#saveHandler);
     this.#editComponent.setDeleteHandler(this.#deleteHandler);
@@ -60,7 +72,7 @@ export default class EventPresenter {
 
   resetView = () => {
     if (this.#mode !== MODE.DEFAULT) {
-      this.#editComponent.reset(this.#event);
+      this.#editComponent.reset(this.#event, this.#offers, this.#destinations);
       this.#editToEvent();
     }
   };
@@ -93,8 +105,9 @@ export default class EventPresenter {
     });
 
   #editClickHandler = () => this.#eventToEdit();
+
   #eventClickHandler = () => {
-    this.#editComponent.reset(this.#event);
+    this.#editComponent.reset(this.#event, this.#offers, this.#destinations);
     this.#editToEvent();
   };
 
