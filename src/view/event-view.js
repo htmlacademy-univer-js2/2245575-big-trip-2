@@ -2,40 +2,34 @@ import {
   convertEventDateIntoDay,
   convertEventDateIntoHour,
   subtractDates,
-  checkFavoriteOption,
+  isFavoriteOption,
   capitalizeFirstLetter,
 } from '../utils.js';
-import { DESTINATIONS } from '../mock/const';
-import { OFFERS } from '../mock/offers.js';
 import AbstractView from '../framework/view/abstract-view';
 
-const createOffersListTemplate = (offers) => {
-  const offersTemplate = offers.reduce((result, offer) => {
-    const offerInfo = OFFERS.find((item) => item.id === offer);
-    return result.concat(
-      `<li class="event__offer">
-      <span class="event__offer-title">${offerInfo.title}</span>
-      &plus;&euro;&nbsp;
-      <span class="event__offer-price">${offerInfo.price}</span>
-    </li>\n`
-    );
-  }, '');
+const createOffersListTemplate = (eventType, eventOffers, allOffers) => {
+  const allOffersForType = allOffers.find(
+    (item) => item.type === eventType
+  ).offers;
+  const selectedOffers = eventOffers.map((offer) =>
+    allOffersForType.find((item) => item.id === offer)
+  );
 
   return `<ul class="event__selected-offers">
-              ${offersTemplate}
+            ${selectedOffers.map((offer) =>`<li class="event__offer">
+                <span class="event__offer-title">${offer.title}</span>
+                &plus;&euro;&nbsp;
+                <span class="event__offer-price">${offer.price}</span>
+            </li>`).join('\n')}
           </ul>`;
 };
 
-const createEventTemplate = ({
-  basePrice,
-  destination,
-  startDate,
-  endDate,
-  isFavorite,
-  offers,
-  type,
-}) => {
-  const name = DESTINATIONS.find((item) => item.id === destination).name;
+const createEventTemplate = (
+  { basePrice, destination, startDate, endDate, isFavorite, offers, type },
+  allOffers,
+  allDestinations
+) => {
+  const name = allDestinations.find((item) => item.id === destination).name;
 
   return `<li class="trip-events__item">
     <div class="event">
@@ -55,8 +49,8 @@ const createEventTemplate = ({
       &euro;&nbsp;<span class="event__price">${basePrice}</span>
     </p>
     <h4 class="visually-hidden">Offers:</h4>
-    ${offers ? createOffersListTemplate(offers) : ''}
-    <button class="event__favorite-btn ${checkFavoriteOption(isFavorite)}" type="button">
+    ${offers ? createOffersListTemplate(type, offers, allOffers) : ''}
+    <button class="event__favorite-btn ${isFavoriteOption(isFavorite)}" type="button">
       <span class="visually-hidden">Add to favorite</span>
       <svg class="event__favorite-icon" width="28" height="28" viewBox="0 0 28 28">
         <path d="M14 21l-8.22899 4.3262 1.57159-9.1631L.685209 9.67376 9.8855 8.33688 14 0l4.1145 8.33688 9.2003 1.33688-6.6574 6.48934 1.5716 9.1631L14 21z"/>\
@@ -71,14 +65,21 @@ const createEventTemplate = ({
 
 export default class EventView extends AbstractView {
   #event;
-
-  constructor(event) {
+  #allOffers;
+  #allDestinations;
+  constructor(event, allOffers, allDestinations) {
     super();
     this.#event = event;
+    this.#allOffers = allOffers;
+    this.#allDestinations = allDestinations;
   }
 
   get template() {
-    return createEventTemplate(this.#event);
+    return createEventTemplate(
+      this.#event,
+      this.#allOffers,
+      this.#allDestinations
+    );
   }
 
   setRollUpHandler = (callback) => {
@@ -94,14 +95,14 @@ export default class EventView extends AbstractView {
   };
 
   setFavoriteHandler = (callback) => {
-    this._callback.favoriteClick = callback;
+    this._callback.favorite = callback;
     this.element
       .querySelector('.event__favorite-btn')
       .addEventListener('click', this.#favoriteClickHandler);
   };
 
-  #favoriteClickHandler = (evt) => {
-    evt.preventDefault();
-    this._callback.favoriteClick();
+  #favoriteClickHandler = (e) => {
+    e.preventDefault();
+    this._callback.favorite();
   };
 }

@@ -1,95 +1,170 @@
-import { render, remove } from '../framework/render';
+import { render, remove, RenderPosition } from '../framework/render';
 import EventsListView from '../view/events-list-view.js';
 import SortingView from '../view/sorting-view';
 import EmptyListView from '../view/empty-list-view';
+import LoadingView from '../view/loading-view.js';
 import EventPresenter from './event-presenter';
-import { sortByPrice, sortByDuration, sortByDate, update } from '../utils';
-import { SORT_TYPES } from '../mock/const';
+import { sortByPrice, sortByDuration, sortByDate, filter } from '../utils';
+import {
+  SORT_TYPES,
+  UPDATE_TYPES,
+  USER_ACTIONS,
+  FILTER_TYPES,
+  TIME_LIMIT,
+} from '../const';
+import NewEventPresenter from './new-event-presenter';
+import UiBlocker from '../framework/ui-blocker/ui-blocker';
+import ErrorView from '../view/error-view';
+import { newEventButtonComponent } from '../main';
 
 export default class RootPresenter {
   #rootContainer;
   #eventsModel;
-  #events;
-  #sortComponent;
+  #filterModel;
+  #sortComponent = null;
+  #loadingComponent = new LoadingView();
+  #errorComponent = new ErrorView();
+  #isLoading = true;
+  #isError = false;
   #eventsList = new EventsListView();
-  #emptyList = new EmptyListView();
+  #emptyList = null;
   #eventPresenter = new Map();
+  #newEventPresenter;
   #currentSortType = SORT_TYPES.DEFAULT;
-  #initialEvents = [];
+  #filterType = FILTER_TYPES.EVERYTHING;
+  #uiBlocker = new UiBlocker(TIME_LIMIT.LOWER_LIMIT, TIME_LIMIT.UPPER_LIMIT);
 
-  constructor(rootContainer, eventsModel) {
+  constructor(rootContainer, eventsModel, filterModel) {
     this.#rootContainer = rootContainer;
     this.#eventsModel = eventsModel;
+    this.#filterModel = filterModel;
+    this.#newEventPresenter = new NewEventPresenter(
+      this.#eventsList.element,
+      this.#actionHandler
+    );
+    this.#eventsModel.addObserver(this.#modelEventHandler);
+    this.#filterModel.addObserver(this.#modelEventHandler);
   }
 
-  init = () => {
-    this.#initialEvents = [...this.#eventsModel.events];
-    this.#events = [...this.#eventsModel.events].sort(sortByDate);
-    this.#renderEventsList();
-  };
+  init = () => this.#render();
 
-  #changeEventHandler = (updatedEvent) => {
-    this.#events = update(this.#events, updatedEvent);
-    this.#initialEvents = update(this.#initialEvents, updatedEvent);
-    this.#eventPresenter.get(updatedEvent.id).init(updatedEvent);
+  get events() {
+    this.#filterType = this.#filterModel.filter;
+    const events = this.#eventsModel.events;
+    const filteredEvents = filter[this.#filterType](events);
+
+    switch (this.#currentSortType) {
+      case SORT_TYPES.PRICE:
+        return filteredEvents.sort(sortByPrice);
+      case SORT_TYPES.TIME:
+        return filteredEvents.sort(sortByDuration);
+      default:
+        return filteredEvents.sort(sortByDate);
+    }
+  }
+
+  get offers() {
+    return this.#eventsModel.offers;
+  }
+
+  get destinations() {
+    return this.#eventsModel.destinations;
+  }
+
+  createEvent = (callback) => {
+    this.#currentSortType = SORT_TYPES.DEFAULT;
+    this.#filterModel.setFilter(UPDATE_TYPES.MAJOR, FILTER_TYPES.EVERYTHING);
+    this.#newEventPresenter.init(callback, this.offers, this.destinations);
   };
 
   #switchModeHandler = () => {
+    this.#newEventPresenter.destroy();
     this.#eventPresenter.forEach((presenter) => presenter.resetView());
   };
 
-  #sort = (sortType) => {
-    switch (sortType) {
-      case SORT_TYPES.PRICE:
-        this.#events.sort(sortByPrice);
+  #actionHandler = async (actionType, updateType, update) => {
+    this.#uiBlocker.block();
+    switch (actionType) {
+      case USER_ACTIONS.UPDATE:
+        this.#eventPresenter.get(update.id).setSaving();
+        try {
+          await this.#eventsModel.updateEvent(updateType, update);
+        } catch (err) {
+          this.#eventPresenter.get(update.id).setAborting();
+        }
         break;
-      case SORT_TYPES.TIME:
-        this.#events.sort(sortByDuration);
+      case USER_ACTIONS.ADD:
+        this.#newEventPresenter.setSaving();
+        try {
+          await this.#eventsModel.addEvent(updateType, update);
+        } catch (err) {
+          this.#newEventPresenter.setAborting();
+        }
+        break;
+      case USER_ACTIONS.DELETE:
+        this.#eventPresenter.get(update.id).setDeleting();
+        try {
+          await this.#eventsModel.deleteEvent(updateType, update);
+        } catch (err) {
+          this.#eventPresenter.get(update.id).setAborting();
+        }
         break;
       default:
-        this.#events.sort(sortByDate);
+        throw new Error(`Action Type ${actionType} is undefined.`);
     }
+    this.#uiBlocker.unblock();
+  };
 
-    this.#currentSortType = sortType;
+  #modelEventHandler = (updateType, data) => {
+    switch (updateType) {
+      case UPDATE_TYPES.PATCH:
+        this.#eventPresenter.get(data.id).init(data);
+        break;
+      case UPDATE_TYPES.MINOR:
+        this.#clear();
+        this.#render();
+        break;
+      case UPDATE_TYPES.MAJOR:
+        this.#clear({ resetSortType: true });
+        this.#render();
+        break;
+      case UPDATE_TYPES.INIT:
+        this.#isLoading = false;
+        remove(this.#loadingComponent);
+        this.#render();
+        break;
+      case UPDATE_TYPES.ERROR:
+        this.#isLoading = false;
+        this.#isError = true;
+        remove(this.#loadingComponent);
+        this.#render();
+        break;
+      default:
+        throw new Error(`Update Type ${updateType} is undefined.`);
+    }
   };
 
   #sortHandler = (sortType) => {
     if (this.#currentSortType === sortType) {
       return;
     }
-    this.#sort(sortType);
-    this.#clearEventstList();
-    this.#renderEventsList();
-  };
-
-  #renderEventsList = () => {
-    if (this.#events.length) {
-      this.#renderSort();
-      render(this.#eventsList, this.#rootContainer);
-      this.#renderEvents();
-    } else {
-      this.#renderEmptyList();
-    }
-  };
-
-  #clearEventstList = () => {
-    this.#eventPresenter.forEach((presenter) => presenter.destroy());
-    this.#eventPresenter.clear();
+    this.#currentSortType = sortType;
+    this.#clear();
+    this.#render();
   };
 
   #renderEvent = (event) => {
     const eventPresenter = new EventPresenter(
       this.#eventsList.element,
-      this.#changeEventHandler,
+      this.#actionHandler,
       this.#switchModeHandler
     );
-    eventPresenter.init(event);
+    eventPresenter.init(event, this.offers, this.destinations);
     this.#eventPresenter.set(event.id, eventPresenter);
   };
 
-  #renderEvents = () => {
-    this.#events.forEach((event) => this.#renderEvent(event));
-  };
+  #renderEvents = (events) =>
+    events.forEach((event) => this.#renderEvent(event));
 
   #renderSort = () => {
     if (this.#sortComponent instanceof SortingView) {
@@ -97,9 +172,55 @@ export default class RootPresenter {
     }
 
     this.#sortComponent = new SortingView(this.#currentSortType);
-    render(this.#sortComponent, this.#rootContainer);
+    render(this.#sortComponent, this.#rootContainer, RenderPosition.AFTERBEGIN);
     this.#sortComponent.setSortHandler(this.#sortHandler);
   };
 
-  #renderEmptyList = () => render(this.#emptyList, this.#rootContainer);
+  #renderEmptyList = () => {
+    this.#emptyList = new EmptyListView(this.#filterType);
+    render(this.#emptyList, this.#rootContainer);
+  };
+
+  #renderLoading = () => render(this.#loadingComponent, this.#rootContainer);
+  #renderError = () => render(this.#errorComponent, this.#rootContainer);
+
+  #render = () => {
+    const events = this.events;
+    render(this.#eventsList, this.#rootContainer);
+    if (this.#isLoading) {
+      this.#renderLoading();
+      return;
+    }
+
+    if (this.#isError) {
+      this.#renderError();
+      newEventButtonComponent.element.disabled = true;
+      return;
+    }
+
+    if (!events.length) {
+      this.#renderEmptyList();
+      return;
+    }
+    this.#renderSort();
+    this.#renderEvents(events);
+  };
+
+  #clear = ({ resetSortType = false } = {}) => {
+    this.#newEventPresenter.destroy();
+    this.#eventPresenter.forEach((presenter) => presenter.destroy());
+    this.#eventPresenter.clear();
+
+    remove(this.#sortComponent);
+    remove(this.#emptyList);
+    remove(this.#loadingComponent);
+
+    if (this.#emptyList) {
+      remove(this.#emptyList);
+    }
+
+    if (resetSortType) {
+      this.#currentSortType = SORT_TYPES.DEFAULT;
+    }
+  };
 }
