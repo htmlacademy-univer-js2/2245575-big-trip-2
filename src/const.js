@@ -1,10 +1,5 @@
 import dayjs from 'dayjs';
 
-const TIME = {
-  MINUTES: 60,
-  HOURS: 24,
-};
-
 const FILTER_TYPES = {
   EVERYTHING: 'everything',
   FUTURE: 'future',
@@ -17,12 +12,6 @@ const SORT_TYPES = {
   PRICE: 'price',
 };
 
-const USER_ACTIONS = {
-  UPDATE: 'UPDATE_POINT',
-  ADD: 'ADD_POINT',
-  DELETE: 'DELETE_POINT',
-};
-
 const UPDATE_TYPES = {
   PATCH: 'PATCH',
   MINOR: 'MINOR',
@@ -30,6 +19,27 @@ const UPDATE_TYPES = {
   INIT: 'INIT',
   ERROR: 'ERROR',
 };
+
+
+const TIME = {
+  MINUTES: 60,
+  HOURS: 24,
+};
+
+
+const TIME_LIMIT = {
+  LOWER_LIMIT: 350,
+  UPPER_LIMIT: 1000,
+};
+
+
+
+const USER_ACTIONS = {
+  UPDATE: 'UPDATE_POINT',
+  ADD: 'ADD_POINT',
+  DELETE: 'DELETE_POINT',
+};
+
 
 const NEW_POINT = {
   basePrice: 0,
@@ -39,11 +49,6 @@ const NEW_POINT = {
   isFavorite: false,
   offers: [],
   type: 'taxi',
-};
-
-const TIME_LIMIT = {
-  LOWER_LIMIT: 350,
-  UPPER_LIMIT: 1000,
 };
 
 export {
