@@ -19,7 +19,6 @@ const navigationElement = headerElement.querySelector(
 );
 const filtersElement = headerElement.querySelector('.trip-controls__filters');
 const contentElement = mainElement.querySelector('.trip-events');
-
 const filterModel = new FilterModel();
 const eventsModel = new EventsModel(
   new EventsApiService(END_POINT, AUTHORIZATION)
@@ -35,7 +34,7 @@ const filterPresenter = new FilterPresenter(
   filterModel,
   eventsModel
 );
-const newEventButtonComponent = new NewEventButtonView();
+export const newEventButtonComponent = new NewEventButtonView();
 
 const closeNewEventFormHandler = () => {
   newEventButtonComponent.element.disabled = false;

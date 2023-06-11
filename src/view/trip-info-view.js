@@ -3,46 +3,38 @@ import AbstractView from '../framework/view/abstract-view';
 
 const addOffersPrices = (eventType, eventOffers, allOffers) => {
   const allOffersForType = allOffers.find(
-    (item) => item.type === eventType
+    ({ type }) => type === eventType
   ).offers;
   const selectedOfferPrices = eventOffers.map(
-    (offer) => allOffersForType.find((item) => item.id === offer).price
+    (offer) => allOffersForType.find(({ id }) => id === offer).price
   );
   return selectedOfferPrices.reduce((sum, price) => sum + price, 0);
 };
 
 const addDestinationName = (destination, allDestinations) =>
-  allDestinations.find((item) => item.id === destination).name;
+  allDestinations.find(({ id }) => id === destination).name;
 
 const getTripDestinationNames = (events) => {
   const tripDestinationNames = events.map((event) => event.destinationName);
-  const uniqueNames = Array.from(new Set(tripDestinationNames));
-  switch (uniqueNames.length) {
+  switch (tripDestinationNames.length) {
     case 1:
-      return `${uniqueNames[0]}`;
+      return `${tripDestinationNames[0]}`;
     case 2:
-      return `${uniqueNames[0]} &mdash; ${uniqueNames[1]}`;
+      return `${tripDestinationNames[0]} &mdash; ${tripDestinationNames[1]}`;
     case 3:
-      return `${uniqueNames[0]} &mdash; ${uniqueNames[1]} &mdash; ${uniqueNames[2]}`;
+      return `${tripDestinationNames[0]} &mdash; ${tripDestinationNames[1]} &mdash; ${tripDestinationNames[2]}`;
     default:
-      return `${uniqueNames[0]} &mdash; ... &mdash;${
-        uniqueNames[uniqueNames.length - 1]
+      return `${tripDestinationNames[0]} &mdash; ... &mdash;${
+        tripDestinationNames[tripDestinationNames.length - 1]
       }`;
   }
 };
 
-const getTotalPrice = (events) => {
-  const totalBasePrice = events.reduce(
-    (total, event) => total + event.basePrice,
+const getTotalPrice = (events) =>
+  events.reduce(
+    (total, { basePrice, offerPrices }) => total + basePrice + offerPrices,
     0
   );
-  const totalOffersPrice = events.reduce(
-    (total, event) => total + event.offerPrices,
-    0
-  );
-
-  return totalBasePrice + totalOffersPrice;
-};
 
 const getTripDates = (events) => {
   const startTripDate = events[0].startDate;
