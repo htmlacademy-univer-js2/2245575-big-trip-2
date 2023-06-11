@@ -35,17 +35,19 @@ export default class EventsModel extends Observable {
       this.#events = [];
       this.#offers = [];
       this.#destinations = [];
+      this._notify(UPDATE_TYPES.ERROR);
+      return;
     }
     this._notify(UPDATE_TYPES.INIT);
   };
 
   updateEvent = async (updateType, update) => {
-    // debugger
     const index = this.#events.findIndex((event) => event.id === update.id);
 
     if (index === -1) {
       throw new Error('Can not update unexisting point');
     }
+
     try {
       const response = await this.#eventsApiService.updateEvent(update);
       const updated = this.#adaptToClient(response);
@@ -79,11 +81,6 @@ export default class EventsModel extends Observable {
     if (index === -1) {
       throw new Error('Can not delete unexisting point');
     }
-
-    this.#events = [
-      ...this.#events.slice(0, index),
-      ...this.#events.slice(index + 1),
-    ];
 
     this._notify(updateType);
     try {
