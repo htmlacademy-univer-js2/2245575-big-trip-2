@@ -15,24 +15,6 @@ const convertEventDateIntoDay = (date) => dayjs(date).format('MMM D');
 const convertEventDateIntoHour = (date) => dayjs(date).format('HH:mm');
 const convertEventDateForEditForm = (date) =>
   dayjs(date).format('DD/MM/YY HH:mm');
-
-const generateDates = () => {
-  const startDate = dayjs().subtract(
-    getRandomInteger(
-      -2 * TIME.HOURS * TIME.MINUTES,
-      2 * TIME.HOURS * TIME.MINUTES
-    ),
-    'minutes'
-  );
-  return {
-    startDate: startDate,
-    endDate: startDate.add(
-      getRandomInteger(TIME.MINUTES / 2, TIME.HOURS * TIME.MINUTES * 2),
-      'minutes'
-    ),
-  };
-};
-
 const subtractDates = (dateFrom, dateTo) => {
   const diffInTotalMinutes = Math.ceil(
     dayjs(dateTo).diff(dayjs(dateFrom), 'minute', true)
@@ -68,7 +50,10 @@ const isSubmitDisabledByDate = (dateTo, dateFrom) =>
   dayjs(dateTo).diff(dayjs(dateFrom)) <= 0;
 const isSubmitDisabledByPrice = (price) =>
   Number(price) > 0 && Number.isInteger(Number(price));
-const isDatesEqual = (dateA, dateB) => dayjs(dateA).isSame(dateB, 'D');
+const isSubmitDisabledByDestinationName = (name, allDestinations) => {
+  const allDestinationNames = Array.from(allDestinations, (it) => it.name);
+  return allDestinationNames.includes(name);
+};
 
 const filter = {
   [FILTER_TYPES.EVERYTHING]: (events) => events.map((event) => event),
@@ -95,14 +80,13 @@ export {
   convertEventDateIntoDay,
   convertEventDateIntoHour,
   convertEventDateForEditForm,
-  generateDates,
   subtractDates,
   isEventPlanned,
   isEventPassed,
   isSubmitDisabledByDate,
   isSubmitDisabledByPrice,
+  isSubmitDisabledByDestinationName,
   isFavoriteOption,
-  isDatesEqual,
   capitalizeFirstLetter,
   filter,
   sortByPrice,
