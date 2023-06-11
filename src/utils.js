@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
-import { FILTER_TYPES, TIME } from './mock/const';
+import { FILTER_TYPES, TIME } from './const';
 
 dayjs.extend(duration);
 
@@ -54,11 +54,13 @@ const subtractDates = (dateFrom, dateTo) => {
 };
 
 const checkDatesRelativeToCurrent = (dateFrom, dateTo) =>
-  dateFrom.isBefore(dayjs()) && dateTo.isAfter(dayjs());
+  dayjs(dateFrom).isBefore(dayjs()) && dayjs(dateTo).isAfter(dayjs());
 const isEventPlanned = (dateFrom, dateTo) =>
-  dateFrom.isAfter(dayjs()) || checkDatesRelativeToCurrent(dateFrom, dateTo);
+  dayjs(dateFrom).isAfter(dayjs()) ||
+  checkDatesRelativeToCurrent(dateFrom, dateTo);
 const isEventPassed = (dateFrom, dateTo) =>
-  dateTo.isBefore(dayjs()) || checkDatesRelativeToCurrent(dateFrom, dateTo);
+  dayjs(dateTo).isBefore(dayjs()) ||
+  checkDatesRelativeToCurrent(dateFrom, dateTo);
 const isFavoriteOption = (isFavorite) =>
   isFavorite ? 'event__favorite-btn--active' : '';
 const capitalizeFirstLetter = (str) => str[0].toUpperCase() + str.slice(1);

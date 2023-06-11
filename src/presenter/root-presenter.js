@@ -1,15 +1,11 @@
-import { render, remove } from '../framework/render';
+import { render, remove, RenderPosition } from '../framework/render';
 import EventsListView from '../view/events-list-view.js';
 import SortingView from '../view/sorting-view';
 import EmptyListView from '../view/empty-list-view';
+import LoadingView from '../view/loading-view.js';
 import EventPresenter from './event-presenter';
 import { sortByPrice, sortByDuration, sortByDate, filter } from '../utils';
-import {
-  SORT_TYPES,
-  UPDATE_TYPES,
-  USER_ACTIONS,
-  FILTER_TYPES,
-} from '../mock/const';
+import { SORT_TYPES, UPDATE_TYPES, USER_ACTIONS, FILTER_TYPES } from '../const';
 import NewEventPresenter from './new-event-presenter';
 
 export default class RootPresenter {
@@ -17,6 +13,8 @@ export default class RootPresenter {
   #eventsModel;
   #filterModel;
   #sortComponent = null;
+  #loadingComponent = new LoadingView();
+  #isLoading = true;
   #eventsList = new EventsListView();
   #emptyList = null;
   #eventPresenter = new Map();
@@ -53,6 +51,14 @@ export default class RootPresenter {
       default:
         return filteredEvents.sort(sortByDate);
     }
+  }
+
+  get offers() {
+    return this.#eventsModel.offers;
+  }
+
+  get destinations() {
+    return this.#eventsModel.destinations;
   }
 
   createEvent = (callback) => {
@@ -95,6 +101,11 @@ export default class RootPresenter {
         this.#clear({ resetSortType: true });
         this.#render();
         break;
+      case UPDATE_TYPES.INIT:
+        this.#isLoading = false;
+        remove(this.#loadingComponent);
+        this.#render();
+        break;
       default:
         throw new Error(`Update Type ${updateType} is undefined.`);
     }
@@ -115,7 +126,7 @@ export default class RootPresenter {
       this.#actionHandler,
       this.#switchModeHandler
     );
-    eventPresenter.init(event);
+    eventPresenter.init(event, this.offers, this.destinations);
     this.#eventPresenter.set(event.id, eventPresenter);
   };
 
@@ -129,7 +140,7 @@ export default class RootPresenter {
     }
 
     this.#sortComponent = new SortingView(this.#currentSortType);
-    render(this.#sortComponent, this.#rootContainer);
+    render(this.#sortComponent, this.#rootContainer, RenderPosition.AFTERBEGIN);
     this.#sortComponent.setSortHandler(this.#sortHandler);
   };
 
@@ -138,14 +149,23 @@ export default class RootPresenter {
     render(this.#emptyList, this.#rootContainer);
   };
 
+  #renderLoading = () => {
+    render(this.#loadingComponent, this.#rootContainer);
+  };
+
   #render = () => {
     const events = this.events;
+    render(this.#eventsList, this.#rootContainer);
+    if (this.#isLoading) {
+      this.#renderLoading();
+      return;
+    }
+
     if (!events.length) {
       this.#renderEmptyList();
       return;
     }
     this.#renderSort();
-    render(this.#eventsList, this.#rootContainer);
     this.#renderEvents(events);
   };
 
@@ -156,6 +176,7 @@ export default class RootPresenter {
 
     remove(this.#sortComponent);
     remove(this.#emptyList);
+    remove(this.#loadingComponent);
 
     if (this.#emptyList) {
       remove(this.#emptyList);

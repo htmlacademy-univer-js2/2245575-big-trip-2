@@ -1,6 +1,5 @@
 import AbstractStatefulView from '../framework/view/abstract-stateful-view';
-import { DESTINATIONS, NEW_POINT } from '../mock/const';
-import { OFFERS, OFFERS_BY_TYPE } from '../mock/offers.js';
+import { NEW_POINT } from '../const';
 import {
   convertEventDateForEditForm,
   capitalizeFirstLetter,
@@ -18,20 +17,24 @@ const createDestionationsOptionsTemplate = (destinations) =>
     ''
   );
 
-const createAvailableOptionsTemplate = (offers, eventType) => {
-  const availableOffers = OFFERS_BY_TYPE.find(
+const createAvailableOptionsTemplate = (eventType, eventOffers, allOffers) => {
+  const allOffersForType = allOffers.find(
     (item) => item.type === eventType
   ).offers;
-  const allOffers = availableOffers.map((offer) =>
-    OFFERS.find((item) => item.id === offer)
-  );
 
-  return allOffers.reduce(
+  return allOffersForType.reduce(
     (result, offer) =>
       result.concat(
         `<div class="event__offer-selector">
-      <input class="event__offer-checkbox  visually-hidden" id="event-offer-${offer.title.split(' ').pop()}-${offer.id}"type="checkbox" name="event-offer-${offer.title.split(' ').pop()}"  ${offers.includes(offer.id) ? 'checked' : ''}>
-      <label class="event__offer-label" for="event-offer-${offer.title.split(' ').pop()}-${offer.id}">
+      <input class="event__offer-checkbox  visually-hidden" id="event-offer-${offer.title
+        .split(' ')
+        .pop()}-${offer.id}"
+        type="checkbox" name="event-offer-${offer.title.split(' ').pop()}"  ${
+          eventOffers.includes(offer.id) ? 'checked' : ''
+        }>
+      <label class="event__offer-label" for="event-offer-${offer.title
+        .split(' ')
+        .pop()}-${offer.id}">
         <span class="event__offer-title">${offer.title}</span>
         &plus;&euro;&nbsp;
         <span class="event__offer-price">${offer.price}</span>
@@ -48,18 +51,21 @@ const createDestinationDescriptionTemplate = (destinations, name) =>
 const createPicturesListTemplate = (pictures) =>
   `<div class="event__photos-container">
       <div class="event__photos-tape">
-      ${pictures.reduce((result, picture) => result.concat(`<img class="event__photo" src="${picture.src}" alt="Event photo">`),'')}
+      ${pictures.reduce(
+        (result, picture) =>
+          result.concat(
+            `<img class="event__photo" src="${picture.src}" alt="Event photo">`
+          ),
+        ''
+      )}
       </div>
    </div>`;
 
-const createEditFormTemplate = ({
-  selectedDestination,
-  type,
-  basePrice,
-  startDate,
-  endDate,
-  offers,
-}) =>
+const createEditFormTemplate = (
+  { selectedDestination, type, basePrice, startDate, endDate, offers },
+  allOffers,
+  allDestinations
+) =>
   `<li class="trip-events__item">
     <form class="event event--edit" action="#" method="post">
       <header class="event__header">
@@ -112,16 +118,26 @@ const createEditFormTemplate = ({
           </div>
         </div>
         <div class="event__field-group  event__field-group--destination">
-          <label class="event__label  event__type-output" for="event-destination-1">${capitalizeFirstLetter(type)}</label>
-          <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" value="${he.encode(selectedDestination.name)}" list="destination-list-1">
-          <datalist id="destination-list-1">${createDestionationsOptionsTemplate(DESTINATIONS)}</datalist>
+          <label class="event__label  event__type-output" for="event-destination-1">
+            ${capitalizeFirstLetter(type)}
+          </label>
+          <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" value="${he.encode(
+            selectedDestination.name
+          )}" list="destination-list-1">
+          <datalist id="destination-list-1">
+            ${createDestionationsOptionsTemplate(allDestinations)}
+          </datalist>
         </div>
         <div class="event__field-group  event__field-group--time">
           <label class="visually-hidden" for="event-start-time-1">From</label>
-          <input class="event__input  event__input--time" id="event-start-time-1" type="text" name="event-start-time" value="${convertEventDateForEditForm(startDate)}">
+          <input class="event__input  event__input--time" id="event-start-time-1" type="text" name="event-start-time" value="${convertEventDateForEditForm(
+            startDate
+          )}">
           &mdash;
           <label class="visually-hidden" for="event-end-time-1">To</label>
-          <input class="event__input  event__input--time" id="event-end-time-1" type="text" name="event-end-time" value="${convertEventDateForEditForm(endDate)}">
+          <input class="event__input  event__input--time" id="event-end-time-1" type="text" name="event-end-time" value="${convertEventDateForEditForm(
+            endDate
+          )}">
         </div>
         <div class="event__field-group  event__field-group--price">
           <label class="event__label" for="event-price-1">
@@ -130,7 +146,9 @@ const createEditFormTemplate = ({
           </label>
           <input class="event__input  event__input--price" id="event-price-1" type="text" name="event-price" value="${basePrice}">
         </div>
-        <button class="event__save-btn  btn  btn--blue" type="submit" ${isSubmitDisabledByDate(startDate, endDate) ? '' : 'disabled'}
+        <button class="event__save-btn  btn  btn--blue" type="submit" ${
+          isSubmitDisabledByDate(startDate, endDate) ? '' : 'disabled'
+        }
         ${isSubmitDisabledByPrice(basePrice) ? '' : 'disabled'}>Save</button>
         <button class="event__reset-btn" type="reset">Delete</button>
         <button class="event__rollup-btn" type="button">
@@ -141,37 +159,47 @@ const createEditFormTemplate = ({
         <section class="event__section  event__section--offers">
           <h3 class="event__section-title  event__section-title--offers">Offers</h3>
           <div class="event__available-offers">
-          ${createAvailableOptionsTemplate(offers, type)}
+          ${createAvailableOptionsTemplate(type, offers, allOffers)}
           </div>
         </section>
         <section class="event__section  event__section--destination">
           <h3 class="event__section-title  event__section-title--destination">Destination</h3>
-          <p class="event__destination-description">${createDestinationDescriptionTemplate(DESTINATIONS,selectedDestination.name)}</p>
-          ${selectedDestination.pictures ? createPicturesListTemplate(selectedDestination.pictures) : ''}
+          <p class="event__destination-description">${createDestinationDescriptionTemplate(
+            allDestinations,
+            selectedDestination.name
+          )}</p>
+          ${
+            selectedDestination.pictures
+              ? createPicturesListTemplate(selectedDestination.pictures)
+              : ''
+          }
         </section>
       </section>
       </form>
     </li>`;
 
 export default class EditFormView extends AbstractStatefulView {
+  #allOffers;
+  #allDestinations;
   #startDatepicker;
   #stopDatepicker;
 
-  constructor(event = NEW_POINT) {
+  constructor(event = NEW_POINT, allOffers, allDestinations) {
     super();
-    this._state = EditFormView.parseEvent(event);
+    this._state = EditFormView.parseEvent(event, allOffers, allDestinations);
+    this.#allOffers = allOffers;
+    this.#allDestinations = allDestinations;
     this.#setInnerHandlers();
     this.#setStartDatepicker();
     this.#setStopDatepicker(this._state.startDate);
   }
 
-  static parseEvent = (event) => ({
+  static parseEvent = (event, allOffers, allDestinations) => ({
     ...event,
-    selectedDestination: DESTINATIONS.find(
+    selectedDestination: allDestinations.find(
       (item) => item.id === event.destination
     ),
-    availableOffers: OFFERS_BY_TYPE.find((item) => item.type === event.type)
-      .offers,
+    availableOffers: allOffers.find((item) => item.type === event.type).offers,
     selectedOffers: event.offers,
   });
 
@@ -183,7 +211,11 @@ export default class EditFormView extends AbstractStatefulView {
   };
 
   get template() {
-    return createEditFormTemplate(this._state);
+    return createEditFormTemplate(
+      this._state,
+      this.#allOffers,
+      this.#allDestinations
+    );
   }
 
   removeElement = () => {
@@ -199,7 +231,10 @@ export default class EditFormView extends AbstractStatefulView {
     }
   };
 
-  reset = (event) => this.updateElement(EditFormView.parseEvent(event));
+  reset = (event, allOffers, allDestinations) =>
+    this.updateElement(
+      EditFormView.parseEvent(event, allOffers, allDestinations)
+    );
 
   _restoreHandlers = () => {
     this.#setInnerHandlers();
@@ -216,6 +251,7 @@ export default class EditFormView extends AbstractStatefulView {
       {
         enableTime: true,
         dateFormat: 'd/m/y H:i',
+        time_24hr: true,
         onChange: this.#startDateChangeHandler,
       }
     );
@@ -234,6 +270,7 @@ export default class EditFormView extends AbstractStatefulView {
       {
         enableTime: true,
         dateFormat: 'd/m/y H:i',
+        time_24hr: true,
         onChange: this.#endDateChangeHandler,
         disable: [
           function (date) {
@@ -289,12 +326,12 @@ export default class EditFormView extends AbstractStatefulView {
   #destinationToggleHandler = (e) => {
     e.preventDefault();
     if (e.target.value !== '') {
-      const findDestinationIndex = DESTINATIONS.findIndex(
+      const findDestinationIndex = this.#allDestinations.findIndex(
         (item) => item.name === e.target.value
       );
       if (findDestinationIndex !== -1) {
         this.updateElement({
-          selectedDestination: DESTINATIONS.find(
+          selectedDestination: this.#allDestinations.find(
             (item) => item.name === e.target.value
           ),
         });
@@ -311,7 +348,7 @@ export default class EditFormView extends AbstractStatefulView {
     this.updateElement({
       type: typeValue,
       offers: [],
-      availableOffers: OFFERS_BY_TYPE.find((item) => item.type === typeValue)
+      availableOffers: this.#allOffers.find((item) => item.type === typeValue)
         .offers,
     });
   };
