@@ -2,7 +2,7 @@ import { render, remove, RenderPosition } from '../framework/render';
 import EventsListView from '../view/events-list-view.js';
 import SortingView from '../view/sorting-view';
 import EmptyListView from '../view/empty-list-view';
-import LoadingView from '../view/loading-view.js';
+import LoaderView from '../view/loader-view.js';
 import EventPresenter from './event-presenter';
 import { sortByPrice, sortByDuration, sortByDate, filter } from '../utils';
 import {
@@ -22,7 +22,7 @@ export default class RootPresenter {
   #eventsModel;
   #filterModel;
   #sortComponent = null;
-  #loadingComponent = new LoadingView();
+  #loadingComponent = new LoaderView();
   #errorComponent = new ErrorView();
   #isLoading = true;
   #isError = false;
